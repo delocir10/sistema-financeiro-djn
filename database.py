@@ -55,6 +55,26 @@ def init_db():
             lucro_estimado NUMERIC
         )
         '''))
+        
+        # Tabela de Usuários (SaaS)
+        s.execute(text('''
+        CREATE TABLE IF NOT EXISTS usuarios (
+            id SERIAL PRIMARY KEY,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            role TEXT NOT NULL,
+            expires_at DATE NOT NULL
+        )
+        '''))
+        
+        # Inserir admin padrão se a tabela estiver vazia
+        result = s.execute(text("SELECT COUNT(*) FROM usuarios")).scalar()
+        if result == 0:
+            s.execute(text('''
+            INSERT INTO usuarios (username, password, role, expires_at)
+            VALUES ('admin', '060622', 'admin', '2099-12-31')
+            '''))
+            
         s.commit()
 
 def add_lancamento(data, descricao, valor, tipo, pessoa_empresa, categoria, observacao, nf, rpa, comprovante, pendencia_critica, motivo_pendencia):
@@ -151,3 +171,57 @@ def get_orcamentos():
     conn = get_connection()
     df = conn.query("SELECT * FROM orcamentos ORDER BY id DESC", ttl=0)
     return df
+
+# --- Funções de Usuários (SaaS) ---
+
+def get_user(username):
+    """Retorna os dados de um usuário pelo username."""
+    conn = get_connection()
+    query = text("SELECT * FROM usuarios WHERE username = :username")
+    df = conn.query(query.text, params={"username": username}, ttl=0)
+    if not df.empty:
+        return df.iloc[0].to_dict()
+    return None
+
+def get_all_users():
+    """Retorna todos os usuários cadastrados."""
+    conn = get_connection()
+    return conn.query("SELECT * FROM usuarios ORDER BY id ASC", ttl=0)
+
+def add_user(username, password, role, expires_at):
+    """Adiciona um novo usuário ao banco."""
+    conn = get_connection()
+    with conn.session as s:
+        # Check if exists
+        result = s.execute(text("SELECT COUNT(*) FROM usuarios WHERE username = :username"), {"username": username}).scalar()
+        if result > 0:
+            return False # Usuário já existe
+            
+        s.execute(text('''
+        INSERT INTO usuarios (username, password, role, expires_at)
+        VALUES (:username, :password, :role, :expires_at)
+        '''), {
+            "username": username,
+            "password": password,
+            "role": role,
+            "expires_at": expires_at.strftime("%Y-%m-%d")
+        })
+        s.commit()
+    return True
+
+def renew_user(user_id, new_expires_at):
+    """Renova o acesso do usuário atualizando a data de expiração."""
+    conn = get_connection()
+    with conn.session as s:
+        s.execute(text("UPDATE usuarios SET expires_at = :expires_at WHERE id = :id"), {
+            "expires_at": new_expires_at.strftime("%Y-%m-%d"),
+            "id": user_id
+        })
+        s.commit()
+
+def delete_user(user_id):
+    """Remove um usuário do banco."""
+    conn = get_connection()
+    with conn.session as s:
+        s.execute(text("DELETE FROM usuarios WHERE id = :id"), {"id": user_id})
+        s.commit()
