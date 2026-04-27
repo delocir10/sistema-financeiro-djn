@@ -28,6 +28,7 @@ with st.form("form_orcamento"):
         valor_hora = st.number_input("Valor da sua Hora (R$)", min_value=0.0, value=150.0, format="%.2f", step=10.0)
         
     with col3:
+        custo_art = st.number_input("Custo de ART/TRT (R$)", min_value=0.0, format="%.2f", step=10.0)
         valor_auxiliar = st.number_input("Valor Pago a Auxiliar (CPF) (R$)", min_value=0.0, format="%.2f", step=10.0)
         aplicar_inss_rpa = st.checkbox("Aplicar encargo estimado de INSS/RPA (20% sobre auxiliar)?", value=True)
 
@@ -50,7 +51,7 @@ if calcular:
         custo_auxiliar_total = valor_auxiliar * 1.2 if aplicar_inss_rpa else valor_auxiliar
         custo_mao_obra_propria = horas_tecnicas * valor_hora
         
-        custo_direto = custo_material + custo_deslocamento + custo_auxiliar_total + custo_mao_obra_propria
+        custo_direto = custo_material + custo_deslocamento + custo_art + custo_auxiliar_total + custo_mao_obra_propria
         
         # Preço Sugerido (Markup/Margem por dentro)
         # Preço = Custo / (1 - Imposto - Margem)
@@ -108,6 +109,7 @@ if calcular:
                 'nome_servico': nome_servico,
                 'custo_material': custo_material,
                 'custo_deslocamento': custo_deslocamento,
+                'custo_art': custo_art,
                 'valor_auxiliar': valor_auxiliar,
                 'aplicar_inss_rpa': aplicar_inss_rpa,
                 'imposto_estimado_pct': imposto_estimado_pct,

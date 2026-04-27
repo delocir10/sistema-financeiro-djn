@@ -40,6 +40,7 @@ def init_db():
             nome_servico TEXT NOT NULL,
             custo_material NUMERIC,
             custo_deslocamento NUMERIC,
+            custo_art NUMERIC,
             valor_auxiliar NUMERIC,
             aplicar_inss_rpa INTEGER,
             imposto_estimado_pct NUMERIC,
@@ -114,12 +115,12 @@ def add_orcamento(dados):
     with conn.session as s:
         s.execute(text('''
         INSERT INTO orcamentos (
-            data_criacao, nome_servico, custo_material, custo_deslocamento, valor_auxiliar,
+            data_criacao, nome_servico, custo_material, custo_deslocamento, custo_art, valor_auxiliar,
             aplicar_inss_rpa, imposto_estimado_pct, margem_desejada_pct, horas_tecnicas,
             valor_hora, custo_direto, imposto_estimado_valor, margem_valor, preco_minimo,
             preco_sugerido, lucro_estimado
         ) VALUES (
-            :data_criacao, :nome_servico, :custo_material, :custo_deslocamento, :valor_auxiliar,
+            :data_criacao, :nome_servico, :custo_material, :custo_deslocamento, :custo_art, :valor_auxiliar,
             :aplicar_inss_rpa, :imposto_estimado_pct, :margem_desejada_pct, :horas_tecnicas,
             :valor_hora, :custo_direto, :imposto_estimado_valor, :margem_valor, :preco_minimo,
             :preco_sugerido, :lucro_estimado
@@ -129,6 +130,7 @@ def add_orcamento(dados):
             "nome_servico": dados['nome_servico'],
             "custo_material": dados['custo_material'],
             "custo_deslocamento": dados['custo_deslocamento'],
+            "custo_art": dados.get('custo_art', 0.0),
             "valor_auxiliar": dados['valor_auxiliar'],
             "aplicar_inss_rpa": int(dados['aplicar_inss_rpa']),
             "imposto_estimado_pct": dados['imposto_estimado_pct'],
