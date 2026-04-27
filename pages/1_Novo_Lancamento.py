@@ -4,10 +4,12 @@ from database import add_lancamento
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from auth import check_password
+from auth import check_password, check_admin
 
 if not check_password():
     st.stop()
+
+check_admin()
 
 st.set_page_config(page_title="Novo Lançamento", page_icon="📝", layout="wide")
 
